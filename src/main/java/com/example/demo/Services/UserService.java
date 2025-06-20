@@ -52,4 +52,29 @@ public class UserService {
         userRepository.save(userToCreate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    public ResponseEntity<User> updateUser(UUID id, User user) {
+        if(id == null) {
+            throw new NullPointerException(String.format("No user with ID: ", id));
+        }
+
+        if(user == null) {
+            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        Optional<User> userToUpdate = userRepository.findById(id);
+
+        if(userToUpdate.isPresent()) {
+            userToUpdate.get().setFirstName(user.getFirstName());
+            userToUpdate.get().setLastName(user.getLastName());
+            userToUpdate.get().setAge(user.getAge());
+
+            userRepository.save(userToUpdate.get());
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } else {
+            throw new NullPointerException(String.format("Could not find user with ID: ", id));
+        }
+
+
+    }
 }
