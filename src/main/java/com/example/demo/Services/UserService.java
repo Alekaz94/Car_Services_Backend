@@ -74,7 +74,19 @@ public class UserService {
         } else {
             throw new NullPointerException(String.format("Could not find user with ID: ", id));
         }
+    }
 
+    public ResponseEntity<User> deleteUser(UUID id) {
+        if(id == null) {
+            throw new NullPointerException(String.format("No user with ID: ", id));
+        }
 
+        Optional<User> foundUser = userRepository.findById(id);
+        if(foundUser.isPresent()) {
+            userRepository.deleteById(id);
+            return ResponseEntity.status(HttpStatus.OK).build();
+        } else {
+            throw new NullPointerException(String.format("Could not find user with ID: ", id));
+        }
     }
 }
