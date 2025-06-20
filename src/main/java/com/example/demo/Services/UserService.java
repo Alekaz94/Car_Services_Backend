@@ -3,8 +3,11 @@ package com.example.demo.Services;
 import com.example.demo.Entities.User;
 import com.example.demo.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,4 +40,16 @@ public class UserService {
         }
     }
 
+    public ResponseEntity<User> createUser(User user) {
+
+        User userToCreate = new User();
+
+        userToCreate.setFirstName(user.getFirstName());
+        userToCreate.setLastName(user.getLastName());
+        userToCreate.setEmail(user.getEmail());
+        userToCreate.setAge(user.getAge());
+
+        userRepository.save(userToCreate);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
 }
