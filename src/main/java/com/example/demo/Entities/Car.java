@@ -13,13 +13,15 @@ public class Car {
     private String model;
     private int year;
     private int milage;
+    private int price;
 
-    public Car(UUID id, String make, String model, int year, int milage){
+    public Car(UUID id, String make, String model, int year, int milage, int price){
         this.id = id;
         this.make = make;
         this.model = model;
         this.year = year;
         this.milage = milage;
+        this.price = price;
     }
 
     public UUID getId() {
@@ -56,5 +58,13 @@ public class Car {
 
     public void setMilage(int milage) {
         this.milage = milage;
+    }
+
+    public int getPrice() {
+        return this.price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
     }
 }
