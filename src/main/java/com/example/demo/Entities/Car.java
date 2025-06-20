@@ -1,6 +1,7 @@
 package com.example.demo.Entities;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
@@ -8,6 +9,7 @@ import java.util.UUID;
 @Entity
 @NoArgsConstructor
 public class Car {
+    @Id
     private UUID id;
     private String make;
     private String model;

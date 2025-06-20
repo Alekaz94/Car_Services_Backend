@@ -4,12 +4,14 @@ import com.example.demo.Enums.Role;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Entity
 @NoArgsConstructor
+@Table(name = "users")
 public class User {
     @Id
     private UUID id;
@@ -19,13 +21,15 @@ public class User {
     private String email;
     @Enumerated
     private Role role;
+    private String password;
 
-    public User(String firstName, String lastName, int age, String email, Role role) {
+    public User(String firstName, String lastName, int age, String email, Role role, String password) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
         this.email = email;
         this.role = role;
+        this.password = password;
     }
 
     public UUID getId() {
@@ -70,5 +74,13 @@ public class User {
 
     public Role getRole() {
         return this.role;
+    }
+
+    public String getPassword() {
+        return this.password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
