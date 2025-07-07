@@ -1,8 +1,7 @@
 package com.example.demo.Entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.example.demo.Enums.Roles;
+import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 
 import java.util.UUID;
@@ -12,17 +11,21 @@ import java.util.UUID;
 @Table(name = "users")
 public class User {
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
     private String firstName;
     private String lastName;
     private String email;
     private String password;
+    @Enumerated
+    private Roles role;
 
-    public User(String firstName, String lastName, String email, String password) {
+    public User(String firstName, String lastName, String email, String password, Roles role) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
+        this.role = role;
     }
 
     public UUID getId() {
@@ -63,5 +66,13 @@ public class User {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Roles getRole() {
+        return this.role;
+    }
+
+    public void setRole(Roles role) {
+        this.role = role;
     }
 }

@@ -4,6 +4,7 @@ import com.example.demo.Authentication.PasswordEncoding;
 import com.example.demo.DTO.LoginDTO;
 import com.example.demo.DTO.UserDTO;
 import com.example.demo.Entities.User;
+import com.example.demo.Enums.Roles;
 import com.example.demo.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -46,11 +47,13 @@ public class UserService {
     public ResponseEntity<UserDTO> createUser(UserDTO userDTO) {
 
         User userToCreate = new User();
+        String passwordHashed = pe.hashPassword(userDTO.getPassword());
 
         userToCreate.setFirstName(userDTO.getFirstName());
         userToCreate.setLastName(userDTO.getLastName());
         userToCreate.setEmail(userDTO.getEmail());
-
+        userToCreate.setPassword(passwordHashed);
+        userToCreate.setRole(Roles.EMPLOYEE);
 
         userRepository.save(userToCreate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -125,13 +128,14 @@ public class UserService {
             throw new IllegalArgumentException("Password must not be empty");
         }
 
+        User user = new User();
         String password = pe.hashPassword(userDTO.getPassword());
-        User user = new User(
-                userDTO.getFirstName(),
-                userDTO.getLastName(),
-                userDTO.getEmail(),
-                password
-        );
+
+        user.setFirstName(userDTO.getFirstName());
+        user.setLastName(userDTO.getLastName());
+        user.setEmail(userDTO.getEmail());
+        user.setPassword(password);
+        user.setRole(Roles.CUSTOMER);
 
         return userRepository.save(user);
     }
