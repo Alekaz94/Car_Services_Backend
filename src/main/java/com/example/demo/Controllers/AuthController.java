@@ -1,6 +1,7 @@
 package com.example.demo.Controllers;
 
 import com.example.demo.DTO.LoginDTO;
+import com.example.demo.DTO.UserDTO;
 import com.example.demo.Entities.User;
 import com.example.demo.Services.UserService;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,5 +21,10 @@ public class AuthController {
     @PostMapping("/login")
     public User loginUser(@RequestBody LoginDTO loginDTO) {
         return userService.login(loginDTO);
+    }
+
+    @PostMapping("/signup")
+    public User signUpUser(@RequestBody UserDTO userDTO) {
+        return userService.signUp(userDTO);
     }
 }
