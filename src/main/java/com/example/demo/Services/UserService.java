@@ -1,5 +1,8 @@
 package com.example.demo.Services;
 
+import com.example.demo.Authentication.PasswordEncoding;
+import com.example.demo.DTO.LoginDTO;
+import com.example.demo.DTO.UserDTO;
 import com.example.demo.Entities.User;
 import com.example.demo.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +18,7 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    PasswordEncoding pe = new PasswordEncoding();
 
     @Autowired
     public UserService(UserRepository userRepository) {
@@ -40,14 +43,14 @@ public class UserService {
         }
     }
 
-    public ResponseEntity<User> createUser(User user) {
+    public ResponseEntity<UserDTO> createUser(UserDTO userDTO) {
 
         User userToCreate = new User();
 
-        userToCreate.setFirstName(user.getFirstName());
-        userToCreate.setLastName(user.getLastName());
-        userToCreate.setEmail(user.getEmail());
-        userToCreate.setAge(user.getAge());
+        userToCreate.setFirstName(userDTO.getFirstName());
+        userToCreate.setLastName(userDTO.getLastName());
+        userToCreate.setEmail(userDTO.getEmail());
+
 
         userRepository.save(userToCreate);
         return ResponseEntity.status(HttpStatus.CREATED).build();
@@ -67,7 +70,6 @@ public class UserService {
         if(userToUpdate.isPresent()) {
             userToUpdate.get().setFirstName(user.getFirstName());
             userToUpdate.get().setLastName(user.getLastName());
-            userToUpdate.get().setAge(user.getAge());
 
             userRepository.save(userToUpdate.get());
             return ResponseEntity.status(HttpStatus.OK).build();
@@ -88,5 +90,49 @@ public class UserService {
         } else {
             throw new NullPointerException(String.format("Could not find user with ID: ", id));
         }
+    }
+
+    public User login(LoginDTO loginDTO) {
+        if (loginDTO.getEmail() == null || loginDTO.getEmail().isEmpty()) {
+            throw new IllegalArgumentException("Email must not be empty");
+        }
+        if(loginDTO.getPassword() == null || loginDTO.getPassword().isEmpty()){
+            throw new IllegalArgumentException("Password must not be empty");
+        }
+
+        Optional<User> checkIfUserExists = userRepository.findByEmail(loginDTO.getEmail());
+        if (checkIfUserExists.isEmpty()) {
+            throw new IllegalArgumentException("No user with that email found!");
+        }
+
+        User foundUser = checkIfUserExists.get();
+
+        boolean checkPasswordForMatch = pe.checkHashedPassword(loginDTO.getPassword(), foundUser.getPassword());
+        if(!checkPasswordForMatch) {
+            throw new IllegalArgumentException("Invalid password!");
+        }
+
+        return foundUser;
+    }
+
+    public User signUp(UserDTO userDTO) {
+        Optional<User> checkIfUserExists = userRepository.findByEmail(userDTO.getEmail());
+        if (checkIfUserExists.isPresent()) {
+            throw new IllegalArgumentException("Email already in use");
+        }
+
+        if(userDTO.getPassword() == null || userDTO.getPassword().isEmpty()){
+            throw new IllegalArgumentException("Password must not be empty");
+        }
+
+        String password = pe.hashPassword(userDTO.getPassword());
+        User user = new User(
+                userDTO.getFirstName(),
+                userDTO.getLastName(),
+                userDTO.getEmail(),
+                password
+        );
+
+        return userRepository.save(user);
     }
 }

@@ -1,15 +1,14 @@
 package com.example.demo.Controllers;
 
+import com.example.demo.DTO.UserDTO;
 import com.example.demo.Entities.User;
 import com.example.demo.Repositories.UserRepository;
 import com.example.demo.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController("/api/v1")
@@ -35,14 +34,8 @@ public class UserController {
     }
 
     @PostMapping("/user")
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        Optional<User> foundUserWithEmail = userRepository.findByEmail(user.getEmail());
-
-        if(foundUserWithEmail.isPresent()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        } else {
-            return userService.createUser(user);
-        }
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
+        return userService.createUser(userDTO);
     }
 
     @PutMapping("/user/{id}")
