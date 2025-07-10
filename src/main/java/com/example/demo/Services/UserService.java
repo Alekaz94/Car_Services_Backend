@@ -1,14 +1,25 @@
 package com.example.demo.Services;
 
+import com.example.demo.Authentication.JwtUtil;
 import com.example.demo.Authentication.PasswordEncoding;
-import com.example.demo.DTO.LoginDTO;
-import com.example.demo.DTO.UserDTO;
+import com.example.demo.DTO.JwtResponse;
+import com.example.demo.DTO.LoginRequest;
+import com.example.demo.DTO.UserRequest;
 import com.example.demo.Entities.User;
 import com.example.demo.Enums.Roles;
 import com.example.demo.Repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,14 +27,23 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
+    private AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
-    PasswordEncoding pe = new PasswordEncoding();
+    private final PasswordEncoding passwordEncoding;
 
     @Autowired
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoding passwordEncoding) {
         this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoding = passwordEncoding;
+    }
+
+    @Autowired
+    public void setAuthenticationManager(@Lazy AuthenticationManager authenticationManager) {
+        this.authenticationManager = authenticationManager;
     }
 
     public List<User> getAllUsers() {
@@ -40,18 +60,19 @@ public class UserService {
         if(foundUser.isPresent()) {
             return foundUser.get();
         } else {
-            throw new NullPointerException(String.format("Could not find user with ID: ", id));
+            throw new NullPointerException(String.format("Could not find user with ID: %s", id));
         }
     }
 
-    public ResponseEntity<UserDTO> createUser(UserDTO userDTO) {
+    public ResponseEntity<UserRequest> createUser(UserRequest userRequest) {
 
         User userToCreate = new User();
-        String passwordHashed = pe.hashPassword(userDTO.getPassword());
+        String workEmail = (userRequest.getFirstName() + "." + userRequest.getLastName() + "@work.com");
+        String passwordHashed = passwordEncoding.hashPassword(userRequest.getPassword());
 
-        userToCreate.setFirstName(userDTO.getFirstName());
-        userToCreate.setLastName(userDTO.getLastName());
-        userToCreate.setEmail(userDTO.getEmail());
+        userToCreate.setFirstName(userRequest.getFirstName());
+        userToCreate.setLastName(userRequest.getLastName());
+        userToCreate.setEmail(workEmail);
         userToCreate.setPassword(passwordHashed);
         userToCreate.setRole(Roles.EMPLOYEE);
 
@@ -61,7 +82,7 @@ public class UserService {
 
     public ResponseEntity<User> updateUser(UUID id, User user) {
         if(id == null) {
-            throw new NullPointerException(String.format("No user with ID: ", id));
+            throw new NullPointerException(String.format("Could not find user with ID: %s", id));
         }
 
         if(user == null) {
@@ -77,13 +98,13 @@ public class UserService {
             userRepository.save(userToUpdate.get());
             return ResponseEntity.status(HttpStatus.OK).build();
         } else {
-            throw new NullPointerException(String.format("Could not find user with ID: ", id));
+            throw new NullPointerException(String.format("Could not find user with ID: %s", id));
         }
     }
 
     public ResponseEntity<User> deleteUser(UUID id) {
         if(id == null) {
-            throw new NullPointerException(String.format("No user with ID: ", id));
+            throw new NullPointerException(String.format("Could not find user with ID: %s", id));
         }
 
         Optional<User> foundUser = userRepository.findById(id);
@@ -91,52 +112,49 @@ public class UserService {
             userRepository.deleteById(id);
             return ResponseEntity.status(HttpStatus.OK).build();
         } else {
-            throw new NullPointerException(String.format("Could not find user with ID: ", id));
+            throw new NullPointerException(String.format("Could not find user with ID: %s", id));
         }
     }
 
-    public User login(LoginDTO loginDTO) {
-        if (loginDTO.getEmail() == null || loginDTO.getEmail().isEmpty()) {
-            throw new IllegalArgumentException("Email must not be empty");
-        }
-        if(loginDTO.getPassword() == null || loginDTO.getPassword().isEmpty()){
-            throw new IllegalArgumentException("Password must not be empty");
-        }
+    public ResponseEntity<?> login(LoginRequest loginRequest) {
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword())
+            );
+            UserDetails userDetails = (UserDetails) auth.getPrincipal();
+            String token = jwtUtil.generateToken(userDetails.getUsername());
+            User user = userRepository.findByEmail(userDetails.getUsername()).orElseThrow(() -> new UsernameNotFoundException("No user found!"));
 
-        Optional<User> checkIfUserExists = userRepository.findByEmail(loginDTO.getEmail());
-        if (checkIfUserExists.isEmpty()) {
-            throw new IllegalArgumentException("No user with that email found!");
+            return ResponseEntity.ok(new JwtResponse(user, token));
+        } catch(AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials!");
         }
-
-        User foundUser = checkIfUserExists.get();
-
-        boolean checkPasswordForMatch = pe.checkHashedPassword(loginDTO.getPassword(), foundUser.getPassword());
-        if(!checkPasswordForMatch) {
-            throw new IllegalArgumentException("Invalid password!");
-        }
-
-        return foundUser;
     }
 
-    public User signUp(UserDTO userDTO) {
-        Optional<User> checkIfUserExists = userRepository.findByEmail(userDTO.getEmail());
-        if (checkIfUserExists.isPresent()) {
-            throw new IllegalArgumentException("Email already in use");
-        }
-
-        if(userDTO.getPassword() == null || userDTO.getPassword().isEmpty()){
-            throw new IllegalArgumentException("Password must not be empty");
+    public User signUp(UserRequest userRequest) {
+        if (userRepository.findByEmail(userRequest.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("Email already registered!");
         }
 
         User user = new User();
-        String password = pe.hashPassword(userDTO.getPassword());
 
-        user.setFirstName(userDTO.getFirstName());
-        user.setLastName(userDTO.getLastName());
-        user.setEmail(userDTO.getEmail());
-        user.setPassword(password);
+        user.setFirstName(userRequest.getFirstName());
+        user.setLastName(userRequest.getLastName());
+        user.setEmail(userRequest.getEmail());
+        user.setPassword(passwordEncoding.hashPassword(userRequest.getPassword()));
         user.setRole(Roles.CUSTOMER);
 
         return userRepository.save(user);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .map(user -> new org.springframework.security.core.userdetails.User(
+                        user.getEmail(),
+                        user.getPassword(),
+                        List.of(new SimpleGrantedAuthority(user.getRole().toString()))
+                ))
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 }

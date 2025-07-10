@@ -1,20 +1,24 @@
 package com.example.demo.Authentication;
 
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PasswordEncoding {
-    private final BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+    private final PasswordEncoder passwordEncoder;
+
+    public PasswordEncoding(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public String hashPassword(String password) {
         if(password == null || password.isEmpty()) {
             throw new IllegalArgumentException("No valid password was given!");
         }
-        return bCryptPasswordEncoder.encode(password);
+        return passwordEncoder.encode(password);
     }
 
     public Boolean checkHashedPassword(String password, String hashedPassword) {
-        boolean passwordCheck = bCryptPasswordEncoder.matches(password, hashedPassword);
-
-        return passwordCheck;
+        return passwordEncoder.matches(password, hashedPassword);
     }
 }

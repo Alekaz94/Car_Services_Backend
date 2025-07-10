@@ -1,9 +1,10 @@
 package com.example.demo.Controllers;
 
-import com.example.demo.DTO.LoginDTO;
-import com.example.demo.DTO.UserDTO;
+import com.example.demo.DTO.LoginRequest;
+import com.example.demo.DTO.UserRequest;
 import com.example.demo.Entities.User;
 import com.example.demo.Services.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,12 +20,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public User loginUser(@RequestBody LoginDTO loginDTO) {
-        return userService.login(loginDTO);
+    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+        System.out.println("Received login: " + loginRequest.getEmail() + " / " + loginRequest.getPassword());
+        return userService.login(loginRequest);
     }
 
     @PostMapping("/signup")
-    public User signUpUser(@RequestBody UserDTO userDTO) {
-        return userService.signUp(userDTO);
+    public User signUpUser(@RequestBody UserRequest userRequest) {
+        return userService.signUp(userRequest);
     }
 }
