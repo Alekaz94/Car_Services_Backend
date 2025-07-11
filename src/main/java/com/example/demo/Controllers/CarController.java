@@ -1,6 +1,7 @@
 package com.example.demo.Controllers;
 
 import com.example.demo.DTO.CarRequest;
+import com.example.demo.DTO.CarUpdateRequest;
 import com.example.demo.Entities.Car;
 import com.example.demo.Services.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.security.Principal;
 import java.util.List;
 import java.util.UUID;
@@ -45,5 +47,17 @@ public class CarController {
     public ResponseEntity<Car> createCar(@RequestBody CarRequest carRequest, Principal principal) {
         Car car = carService.addCarToUser(carRequest, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(car);
+    }
+
+    @PutMapping("/{carId}")
+    public ResponseEntity<Car> updateCar(@PathVariable UUID carId, @RequestBody CarUpdateRequest carRequest, Principal principal) throws AccessDeniedException {
+        Car car = carService.updateCar(carId, carRequest, principal.getName());
+        return ResponseEntity.ok(car);
+    }
+
+    @DeleteMapping("/{carId}")
+    public ResponseEntity<Car> deleteCar(@PathVariable UUID carId, Principal principal) throws AccessDeniedException {
+        Car car = carService.deleteCar(carId, principal.getName());
+        return ResponseEntity.noContent().build();
     }
 }
