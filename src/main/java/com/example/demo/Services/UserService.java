@@ -23,7 +23,6 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -46,74 +45,58 @@ public class UserService implements UserDetailsService {
         this.authenticationManager = authenticationManager;
     }
 
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userRepository.findAll());
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
-    public ResponseEntity<User> getUser(UUID id) {
+    public User getUser(UUID id) {
         if(id == null) {
             throw new NullPointerException("No id was entered.");
         }
-
-        Optional<User> foundUser = userRepository.findById(id);
-
-        if(foundUser.isPresent()) {
-            return ResponseEntity.ok(foundUser.get());
-        } else {
-            throw new NullPointerException(String.format("Could not find user with ID: %s", id));
-        }
+        return userRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("User not found!"));
     }
 
-    public ResponseEntity<UserRequest> createUser(UserRequest userRequest) {
-
+    public User createUser(UserRequest userRequest) {
         User userToCreate = new User();
-        String workEmail = (userRequest.getFirstName() + "." + userRequest.getLastName() + "@work.com");
-        String passwordHashed = passwordEncoding.hashPassword(userRequest.getPassword());
+        String workEmail = (userRequest.firstName() + "." + userRequest.lastName() + "@work.com");
+        String passwordHashed = passwordEncoding.hashPassword(userRequest.password());
 
-        userToCreate.setFirstName(userRequest.getFirstName());
-        userToCreate.setLastName(userRequest.getLastName());
+        userToCreate.setFirstName(userRequest.firstName());
+        userToCreate.setLastName(userRequest.lastName());
         userToCreate.setEmail(workEmail);
         userToCreate.setPassword(passwordHashed);
         userToCreate.setRole(Roles.EMPLOYEE);
 
         userRepository.save(userToCreate);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return userToCreate;
     }
 
-    public ResponseEntity<User> updateUser(UUID id, User user) {
+    public User updateUser(UUID id, User user) {
         if(id == null) {
             throw new NullPointerException(String.format("Could not find user with ID: %s", id));
         }
 
         if(user == null) {
-            return  ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            throw new NullPointerException("No id parameter given!");
         }
 
-        Optional<User> userToUpdate = userRepository.findById(id);
+        User userToUpdate = getUserById(id);
 
-        if(userToUpdate.isPresent()) {
-            userToUpdate.get().setFirstName(user.getFirstName());
-            userToUpdate.get().setLastName(user.getLastName());
+        userToUpdate.setFirstName(user.getFirstName());
+        userToUpdate.setLastName(user.getLastName());
+        userRepository.save(userToUpdate);
+        return userToUpdate;
 
-            userRepository.save(userToUpdate.get());
-            return ResponseEntity.status(HttpStatus.OK).build();
-        } else {
-            throw new NullPointerException(String.format("Could not find user with ID: %s", id));
-        }
     }
 
-    public ResponseEntity<User> deleteUser(UUID id) {
+    public User deleteUser(UUID id) {
         if(id == null) {
             throw new NullPointerException(String.format("Could not find user with ID: %s", id));
         }
 
-        Optional<User> foundUser = userRepository.findById(id);
-        if(foundUser.isPresent()) {
-            userRepository.deleteById(id);
-            return ResponseEntity.status(HttpStatus.OK).build();
-        } else {
-            throw new NullPointerException(String.format("Could not find user with ID: %s", id));
-        }
+        User foundUser = getUserById(id);
+        userRepository.deleteById(id);
+        return foundUser;
     }
 
     public ResponseEntity<?> login(LoginRequest loginRequest) {
@@ -132,16 +115,16 @@ public class UserService implements UserDetailsService {
     }
 
     public User signUp(UserRequest userRequest) {
-        if (userRepository.findByEmail(userRequest.getEmail()).isPresent()) {
+        if (userRepository.findByEmail(userRequest.email()).isPresent()) {
             throw new IllegalArgumentException("Email already registered!");
         }
 
         User user = new User();
 
-        user.setFirstName(userRequest.getFirstName());
-        user.setLastName(userRequest.getLastName());
-        user.setEmail(userRequest.getEmail());
-        user.setPassword(passwordEncoding.hashPassword(userRequest.getPassword()));
+        user.setFirstName(userRequest.firstName());
+        user.setLastName(userRequest.lastName());
+        user.setEmail(userRequest.email());
+        user.setPassword(passwordEncoding.hashPassword(userRequest.password()));
         user.setRole(Roles.CUSTOMER);
 
         return userRepository.save(user);
@@ -156,5 +139,9 @@ public class UserService implements UserDetailsService {
                         List.of(new SimpleGrantedAuthority(user.getRole().toString()))
                 ))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+    }
+
+    public User getUserById(UUID id) {
+        return userRepository.findById(id).orElseThrow(() -> new UsernameNotFoundException("User not found!"));
     }
 }

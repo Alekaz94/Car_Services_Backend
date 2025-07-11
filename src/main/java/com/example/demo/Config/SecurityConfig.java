@@ -27,6 +27,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/api/v1/users/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/api/v1/cars/listings").permitAll()
+                        .requestMatchers("/api/v1/cars/my-cars").hasAnyAuthority("ROLE_ADMIN", "ROLE_EMPLOYEE", "ROLE_CUSTOMER")
+                        .requestMatchers("/api/v1/cars/**").hasAnyAuthority("ROLE_ADMIN", "ROLE_EMPLOYEE")
                     .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)

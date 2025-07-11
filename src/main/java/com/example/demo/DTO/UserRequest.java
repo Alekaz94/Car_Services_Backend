@@ -1,15 +1,7 @@
 package com.example.demo.DTO;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserRequest {
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String password;
+public record UserRequest(String firstName,
+                          String lastName,
+                          String email,
+                          String password) {
 }
