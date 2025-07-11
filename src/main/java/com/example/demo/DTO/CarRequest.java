@@ -7,9 +7,11 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserRequest {
-    private String firstName;
-    private String lastName;
-    private String email;
-    private String password;
+public class CarRequest {
+    String make;
+    String model;
+    String licencePlate;
+    int year;
+    int milage;
+    int price;
 }

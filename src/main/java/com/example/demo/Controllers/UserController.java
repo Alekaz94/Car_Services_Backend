@@ -1,6 +1,7 @@
 package com.example.demo.Controllers;
 
 import com.example.demo.DTO.UserRequest;
+import com.example.demo.Entities.Car;
 import com.example.demo.Entities.User;
 import com.example.demo.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,12 +23,12 @@ public class UserController {
     }
 
     @GetMapping("/{userId}")
-    public User getUser(@PathVariable UUID userId) {
+    public ResponseEntity<User> getUser(@PathVariable UUID userId) {
         return userService.getUser(userId);
     }
 
     @GetMapping()
-    public List<User> getAllUsers() {
+    public ResponseEntity<List<User>> getAllUsers() {
         return userService.getAllUsers();
     }
 

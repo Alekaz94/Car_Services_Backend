@@ -46,11 +46,11 @@ public class UserService implements UserDetailsService {
         this.authenticationManager = authenticationManager;
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public ResponseEntity<List<User>> getAllUsers() {
+        return ResponseEntity.ok(userRepository.findAll());
     }
 
-    public User getUser(UUID id) {
+    public ResponseEntity<User> getUser(UUID id) {
         if(id == null) {
             throw new NullPointerException("No id was entered.");
         }
@@ -58,7 +58,7 @@ public class UserService implements UserDetailsService {
         Optional<User> foundUser = userRepository.findById(id);
 
         if(foundUser.isPresent()) {
-            return foundUser.get();
+            return ResponseEntity.ok(foundUser.get());
         } else {
             throw new NullPointerException(String.format("Could not find user with ID: %s", id));
         }
