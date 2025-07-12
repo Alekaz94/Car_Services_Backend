@@ -4,6 +4,7 @@ import com.example.demo.DTO.LoginRequest;
 import com.example.demo.DTO.UserRequest;
 import com.example.demo.Entities.User;
 import com.example.demo.Services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,13 +21,13 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) {
         System.out.println("Received login: " + loginRequest.getEmail() + " / " + loginRequest.getPassword());
         return userService.login(loginRequest);
     }
 
     @PostMapping("/signup")
-    public User signUpUser(@RequestBody UserRequest userRequest) {
+    public User signUpUser(@Valid @RequestBody UserRequest userRequest) {
         return userService.signUp(userRequest);
     }
 }

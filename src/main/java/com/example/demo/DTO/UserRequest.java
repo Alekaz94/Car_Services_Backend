@@ -1,7 +1,9 @@
 package com.example.demo.DTO;
 
-public record UserRequest(String firstName,
-                          String lastName,
-                          String email,
-                          String password) {
+import jakarta.validation.constraints.NotNull;
+
+public record UserRequest(@NotNull String firstName,
+                          @NotNull String lastName,
+                          @NotNull String email,
+                          @NotNull String password) {
 }

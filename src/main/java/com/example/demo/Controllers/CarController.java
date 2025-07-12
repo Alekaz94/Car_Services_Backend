@@ -4,6 +4,7 @@ import com.example.demo.DTO.CarRequest;
 import com.example.demo.DTO.CarUpdateRequest;
 import com.example.demo.Entities.Car;
 import com.example.demo.Services.CarService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,13 +45,13 @@ public class CarController {
     }
 
     @PostMapping()
-    public ResponseEntity<Car> createCar(@RequestBody CarRequest carRequest, Principal principal) {
+    public ResponseEntity<Car> createCar(@Valid @RequestBody CarRequest carRequest, Principal principal) {
         Car car = carService.addCarToUser(carRequest, principal.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(car);
     }
 
     @PutMapping("/{carId}")
-    public ResponseEntity<Car> updateCar(@PathVariable UUID carId, @RequestBody CarUpdateRequest carRequest, Principal principal) throws AccessDeniedException {
+    public ResponseEntity<Car> updateCar(@PathVariable UUID carId, @Valid @RequestBody CarUpdateRequest carRequest, Principal principal) throws AccessDeniedException {
         Car car = carService.updateCar(carId, carRequest, principal.getName());
         return ResponseEntity.ok(car);
     }

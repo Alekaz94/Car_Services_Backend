@@ -3,6 +3,7 @@ package com.example.demo.Controllers;
 import com.example.demo.DTO.UserRequest;
 import com.example.demo.Entities.User;
 import com.example.demo.Services.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,13 +36,13 @@ public class UserController {
     }
 
     @PostMapping()
-    public ResponseEntity<User> createUser(@RequestBody UserRequest userRequest) {
+    public ResponseEntity<User> createUser(@Valid @RequestBody UserRequest userRequest) {
         User user = userService.createUser(userRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
     @PutMapping("/{userId}")
-    public ResponseEntity<User> updateUser(@PathVariable UUID userId, @RequestBody User userToUpdate) {
+    public ResponseEntity<User> updateUser(@PathVariable UUID userId, @Valid @RequestBody User userToUpdate) {
         User user = userService.updateUser(userId, userToUpdate);
         return ResponseEntity.ok(user);
     }
